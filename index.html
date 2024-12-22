@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aim Practice Game</title>
+    <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+    <div id="gameContainer"></div>
+    <header>
+        <p id="score">Score : 0</p>
+        <p id="avgTime">Avg Time : 0</p>
+    </header>
+    <div id="mainMenu">
+        <h1>Aim Practice Game</h1>
+        <p>GameModes: </p>
+        <div>
+            <div id="ballSizeDiv">
+                <legend for="ballSize">Select ball size:</legend>
+                <input type="text" name="ballSize" id="ballSize" placeholder="50" size="10px"><p>px</p>
+            </div>
+            <button onclick="startGame('basic')" id="basic">Basic</button>
+            <button onclick="startGame('challenging')" id="Challenging">Challenging</button>
+            <button onclick="startGame('relaxed')" id="relaxed">Relaxed</button>
+        </div>
+        <p id="highScore">HighScore: 0</p>
+    </div>
+    <div id="endMenu">
+        <h1>Game Ended!</h1>
+        <p id="endScore">Your Score: 0  &nbsp &nbsp &nbsp &nbsp &nbsp Avg-Reaction Time: 0ms </p>
+        <p id="endAccuracyScore">Accuracy score: 0</p>
+        
+        <div>
+            <button onclick="restart()" id="restartButton">Restart</button>
+            <button onclick="returnMainMenu()" id="mainMenuButton">Main Menu</button>
+        </div>
+    </div>
+    <button onclick="returnMainMenu()" id="exit">Exit</button>
+</body>
+<script>
+    const mainMenu = document.getElementById("mainMenu");
+    const endMenu = document.getElementById("endMenu");
+    const header = document.querySelector("header");
+    const gameContainer = document.getElementById("gameContainer");
+    const scoreDisplay = document.getElementById("score");
+    const avgTimeDisplay = document.getElementById("avgTime");
+    const endScoreDisplay = document.getElementById("endScore");
+    const highScore = localStorage.getItem("highscore");
+    const highScoreDisplay = document.getElementById("highScore");
+    const exitButton = document.getElementById("exit");
+    const inputCircleSize = document.getElementById("ballSize");
+    const accuracyScoreDisplay = document.getElementById("endAccuracyScore");
+    const maxClick = 100;
+    const defaultCircleSize = 50;
+    highScoreDisplay.innerHTML = `HighScore: ${highScore}`;
+    let circle = document.createElement("div");
+    circle.id = "circle";
+
+    let weight_score = 0.5;
+    let weight_time = 0.5;
+    let accuracyScore = 0; 
+    let score = 0;
+    let startTime = null;
+    let reactionCount = 0;
+    let avgTime = 0;
+    let reactionTime = 0;
+    let circleSize = defaultCircleSize;
+
+    function startGame(selectedMode){
+        reset();
+        mode = selectedMode;
+        console.log(mode);
+        if(mode === "relaxed"){
+            exitButton.style.display = "block";
+        }
+        mainMenu.style.display = "none";
+        endMenu.style.display = "none";
+        header.style.display = "flex";
+        spawnCircle();
+    };
+    gameContainer.addEventListener("click", (e) => {
+        if(mode !== "relaxed"){
+            gameOver()
+        }
+    });
+    function spawnCircle(){
+        if (mode === "challenging"){
+            challengingMode();
+        }else{
+            inputCircleSizeValue = inputCircleSize.value;
+            if (inputCircleSizeValue <= 70 && inputCircleSizeValue > 4){
+                circleSize = inputCircleSizeValue ? Number(inputCircleSizeValue) : 50;
+            }
+        }
+        circle.style.width = `${circleSize}px`;
+        circle.style.height = `${circleSize}px`;
+        circle.style.position = "absolute"
+        circle.style.left = `${Math.random()*(gameContainer.clientWidth - circleSize)}px`;
+        circle.style.top = `${Math.random() * (gameContainer.clientHeight - circleSize)}px`;
+        gameContainer.appendChild(circle); // Append to gameContainer
+    }
+    circle.addEventListener("click", (e) =>{
+        e.stopPropagation();
+        score++;
+        scoreDisplay.innerHTML = `Score : ${score}`
+        resetCirclePostion();
+        avgReactionTime();
+    })
+    function resetCirclePostion(){
+        spawnCircle();
+    }
+    function challengingMode(){
+        console.log(circleSize);
+        circleSize = (((5-defaultCircleSize)/100)*score)+defaultCircleSize;
+        console.log(circleSize);
+    }
+    function gameOver(){
+        gameContainer.removeChild(circle);
+        endMenu.style.display = "flex";
+        header.style.display = "none";
+        calculateAccuracyScore();
+        if(accuracyScore > highScore){
+            localStorage.setItem("highscore", accuracyScore);
+            highScoreDisplay.innerHTML = `HighScore: ${accuracyScore}`;
+        }
+        endScoreDisplay.innerHTML = `Your Score: ${score}  &nbsp &nbsp &nbsp &nbsp  Avg-Reaction Time: ${avgTime.toFixed(2)}ms`;
+        const username = prompt("Enter your username: "); // Get username
+        uploadScoreData(username, score, avgTime, accuracyScore);
+    }
+
+    
+    function calculateAccuracyScore(){
+        let normalizedTime = avgTime / 1000;
+        accuracyScore = ((score*0.5)+(7/normalizedTime))*100;
+        if (accuracyScore === Infinity){
+            accuracyScore = 0;
+            score = 1;
+        }
+        accuracyScore = accuracyScore.toFixed(2);
+        accuracyScoreDisplay.innerHTML = `Accuracy Score: ${accuracyScore}`;
+        return accuracyScore;
+    }
+
+    function returnMainMenu(){
+        reset();
+        header.style.display = "none";
+        endMenu.style.display = "none";
+        mainMenu.style.display = "flex";
+        exitButton.style.display = "none";
+    }
+    function avgReactionTime() {
+        if (!startTime) {
+            startTime = Date.now();
+        } else {
+            const reactionTime = Date.now() - startTime;
+            avgTime = ((avgTime * reactionCount) + reactionTime) / (reactionCount + 1);
+            reactionCount++;
+            startTime = Date.now();
+            avgTimeDisplay.innerHTML = `Avg Time : ${avgTime.toFixed(2)} ms`;
+        }
+    }
+    function restart(){
+        reset();
+        startGame(mode);
+    }
+    function reset(){
+        if (gameContainer.contains(circle)) {
+            gameContainer.removeChild(circle);
+        }
+        startTime = null;
+        avgTime = 0;
+        reactionCount = 0;
+        score = 0;
+        circleSize = 50;
+        accuracyScore = 0;
+        scoreDisplay.innerHTML = `Score : ${score}`;
+        avgTimeDisplay.innerHTML = 'Avg Time : 0ms';
+    }
+
+    // Function to upload score data to the serverless function
+    function uploadScoreData(username, score, avgTime, responseScore) {
+        const data = {
+            username,
+            score,
+            avgTime,
+            responseScore
+        };
+
+        return fetch('/.netlify/functions/saveScore', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data),
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Score saved:', data);
+        })
+        .catch((error) => {
+            console.error('Error saving score:', error);
+        });
+}
+
+
+
+</script>
+
+</html>
