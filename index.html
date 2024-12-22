@@ -179,12 +179,13 @@
     }
 
     // Function to upload score data to the serverless function
-    function uploadScoreData(username, score, avgTime, responseScore) {
+    // Function to upload score data to the serverless function
+    function uploadScoreData(username, score, avgTime, accuracyScore) {
         const data = {
             username,
             score,
             avgTime,
-            responseScore
+            accuracyScore  // Make sure to pass accuracyScore instead of responseScore
         };
 
         return fetch('/.netlify/functions/uploadScore', {
@@ -196,12 +197,15 @@
         })
         .then(response => response.json())
         .then(data => {
-            console.log('Score saved:', data);
+            if (data.message) {
+                console.log('Score saved:', data.message);  // Log success message from the server
+            }
         })
         .catch((error) => {
-            console.error('Error saving score:', error);
+            console.error('Error saving score:', error);  // Log any errors
         });
-}
+    }
+
 
 
 
