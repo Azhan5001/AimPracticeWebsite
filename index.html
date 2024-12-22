@@ -1,24 +1,62 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aim Practice Game</title>
     <link rel="stylesheet" href="./style.css">
 </head>
+
 <body>
     <div id="gameContainer"></div>
     <header>
         <p id="score">Score : 0</p>
         <p id="avgTime">Avg Time : 0</p>
     </header>
+    <div id="forms">
+            <div id="register">
+                <h1>REGISTER</h1>
+                <p id="error"></p>
+                <div>
+                    <label for="regUsername">Username</label>
+                    <input type="text" id="regUsername" placeholder="Username" required>
+                </div>
+                <div>
+                    <label for="regPassword">Password</label>
+                    <input type="password" id="regPassword" placeholder="Password" required>
+                </div>
+                <div>
+                    <label for="regRe-password">Re-Password</label>
+                    <input type="password" id="regRe-password" placeholder="Re-Password" required>
+                </div>
+                <div class="regButtons">
+                    <button onclick="register()">Register</button>
+                    <button onclick="toDisplayLogin()">login</button>
+                </div>
+            </div>
+        <form>
+            <div id="login">
+                <h1>Login</h1>
+                <label for="logUsername">Username: </label>
+                <input type="text" name="logUsername" id="logUsername" placeholder="Username" required>
+                <label for="logPassword">Password: </label>
+                <input type="password" name="logPassword" id="logPassword" placeholder="Password" required>
+                <div class="regButtons">
+                    <button onclick="toDisplayRegister()">Register</button>
+                    <button onclick="login()">login</button>
+                </div>
+            </div>
+        </form>
+    </div>
     <div id="mainMenu">
         <h1>Aim Practice Game</h1>
         <p>GameModes: </p>
         <div>
             <div id="ballSizeDiv">
                 <legend for="ballSize">Select ball size:</legend>
-                <input type="text" name="ballSize" id="ballSize" placeholder="50" size="10px"><p>px</p>
+                <input type="text" name="ballSize" id="ballSize" placeholder="50" size="10px">
+                <p>px</p>
             </div>
             <button onclick="startGame('basic')" id="basic">Basic</button>
             <button onclick="startGame('challenging')" id="Challenging">Challenging</button>
@@ -28,9 +66,9 @@
     </div>
     <div id="endMenu">
         <h1>Game Ended!</h1>
-        <p id="endScore">Your Score: 0  &nbsp &nbsp &nbsp &nbsp &nbsp Avg-Reaction Time: 0ms </p>
+        <p id="endScore">Your Score: 0 &nbsp &nbsp &nbsp &nbsp &nbsp Avg-Reaction Time: 0ms </p>
         <p id="endAccuracyScore">Accuracy score: 0</p>
-        
+
         <div>
             <button onclick="restart()" id="restartButton">Restart</button>
             <button onclick="returnMainMenu()" id="mainMenuButton">Main Menu</button>
@@ -53,13 +91,16 @@
     const accuracyScoreDisplay = document.getElementById("endAccuracyScore");
     const maxClick = 100;
     const defaultCircleSize = 50;
+    const registerDisplay = document.getElementById('register');
+    const loginDisplay = document.getElementById('login');
+    const regError = document.getElementById('error').textContent = '';
     highScoreDisplay.innerHTML = `HighScore: ${highScore}`;
     let circle = document.createElement("div");
     circle.id = "circle";
 
     let weight_score = 0.5;
     let weight_time = 0.5;
-    let accuracyScore = 0; 
+    let accuracyScore = 0;
     let score = 0;
     let startTime = null;
     let reactionCount = 0;
@@ -67,11 +108,11 @@
     let reactionTime = 0;
     let circleSize = defaultCircleSize;
 
-    function startGame(selectedMode){
+    function startGame(selectedMode) {
         reset();
         mode = selectedMode;
         console.log(mode);
-        if(mode === "relaxed"){
+        if (mode === "relaxed") {
             exitButton.style.display = "block";
         }
         mainMenu.style.display = "none";
@@ -80,60 +121,59 @@
         spawnCircle();
     };
     gameContainer.addEventListener("click", (e) => {
-        if(mode !== "relaxed"){
+        if (mode !== "relaxed") {
             gameOver()
         }
     });
-    function spawnCircle(){
-        if (mode === "challenging"){
+    function spawnCircle() {
+        if (mode === "challenging") {
             challengingMode();
-        }else{
+        } else {
             inputCircleSizeValue = inputCircleSize.value;
-            if (inputCircleSizeValue <= 70 && inputCircleSizeValue > 4){
+            if (inputCircleSizeValue <= 70 && inputCircleSizeValue > 4) {
                 circleSize = inputCircleSizeValue ? Number(inputCircleSizeValue) : 50;
             }
         }
         circle.style.width = `${circleSize}px`;
         circle.style.height = `${circleSize}px`;
         circle.style.position = "absolute"
-        circle.style.left = `${Math.random()*(gameContainer.clientWidth - circleSize)}px`;
+        circle.style.left = `${Math.random() * (gameContainer.clientWidth - circleSize)}px`;
         circle.style.top = `${Math.random() * (gameContainer.clientHeight - circleSize)}px`;
         gameContainer.appendChild(circle); // Append to gameContainer
     }
-    circle.addEventListener("click", (e) =>{
+    circle.addEventListener("click", (e) => {
         e.stopPropagation();
         score++;
         scoreDisplay.innerHTML = `Score : ${score}`
         resetCirclePostion();
         avgReactionTime();
     })
-    function resetCirclePostion(){
+    function resetCirclePostion() {
         spawnCircle();
     }
-    function challengingMode(){
+    function challengingMode() {
         console.log(circleSize);
-        circleSize = (((5-defaultCircleSize)/100)*score)+defaultCircleSize;
+        circleSize = (((5 - defaultCircleSize) / 100) * score) + defaultCircleSize;
         console.log(circleSize);
     }
-    function gameOver(){
+    function gameOver() {
         gameContainer.removeChild(circle);
         endMenu.style.display = "flex";
         header.style.display = "none";
         calculateAccuracyScore();
-        if(accuracyScore > highScore){
+        if (accuracyScore > highScore) {
             localStorage.setItem("highscore", accuracyScore);
             highScoreDisplay.innerHTML = `HighScore: ${accuracyScore}`;
         }
         endScoreDisplay.innerHTML = `Your Score: ${score}  &nbsp &nbsp &nbsp &nbsp  Avg-Reaction Time: ${avgTime.toFixed(2)}ms`;
-        const username = prompt("Enter your username: "); // Get username
         uploadScoreData(username, score, avgTime, accuracyScore);
     }
 
-    
-    function calculateAccuracyScore(){
+
+    function calculateAccuracyScore() {
         let normalizedTime = avgTime / 1000;
-        accuracyScore = ((score*0.5)+(7/normalizedTime))*100;
-        if (accuracyScore === Infinity){
+        accuracyScore = ((score * 0.5) + (7 / normalizedTime)) * 100;
+        if (accuracyScore === Infinity) {
             accuracyScore = 0;
             score = 1;
         }
@@ -142,12 +182,14 @@
         return accuracyScore;
     }
 
-    function returnMainMenu(){
+    function returnMainMenu() {
         reset();
         header.style.display = "none";
         endMenu.style.display = "none";
         mainMenu.style.display = "flex";
         exitButton.style.display = "none";
+        registerDisplay.style.display = 'none';
+        loginDisplay.style.display = 'none';
     }
     function avgReactionTime() {
         if (!startTime) {
@@ -160,11 +202,11 @@
             avgTimeDisplay.innerHTML = `Avg Time : ${avgTime.toFixed(2)} ms`;
         }
     }
-    function restart(){
+    function restart() {
         reset();
         startGame(mode);
     }
-    function reset(){
+    function reset() {
         if (gameContainer.contains(circle)) {
             gameContainer.removeChild(circle);
         }
@@ -195,17 +237,76 @@
             },
             body: JSON.stringify(data),
         })
-        .then(response => response.json())
-        .then(data => {
-            if (data.message) {
-                console.log('Score saved:', data.message);  // Log success message from the server
-            }
-        })
-        .catch((error) => {
-            console.error('Error saving score:', error);  // Log any errors
-        });
+            .then(response => response.json())
+            .then(data => {
+                if (data.message) {
+                    console.log('Score saved:', data.message);  // Log success message from the server
+                }
+            })
+            .catch((error) => {
+                console.error('Error saving score:', error);  // Log any errors
+            });
     }
 
+    async function register() {
+    console.log('running function');
+    
+    // Get values from the input fields
+    regUsernameValue = document.getElementById('regUsername').value;
+    regPasswordValue = document.getElementById('regPassword').value;
+    regRePasswordValue = document.getElementById('regRe-password').value;
+
+    // Check if passwords match
+    if (regPasswordValue !== regRePasswordValue) {
+        console.log('password does not match');
+        document.getElementById('error').innerHTML = 'Password does not match.';
+        return;
+    }
+
+    // Check username availability
+    const usernameAvailable = await checkUsernameAvailability(regUsernameValue);
+    if (!usernameAvailable) {
+        document.getElementById('error').textContent = 'Username already taken.';
+        return;
+    }
+
+    // Proceed with registration if no issues
+    console.log('Username and password are valid. Proceed with registration.');
+    returnMainMenu();
+    }
+
+    function toDisplayLogin(){
+        loginDisplay.style.display = 'flex';
+        registerDisplay.style.display = 'none';
+    }
+    function toDisplayRegister(){
+        loginDisplay.style.display = 'none';
+        registerDisplay.style.display = 'flex';
+    }
+
+
+    async function checkUsernameAvailability(username) {
+        try {
+            const response = await fetch('/.netlify/functions/checkUsername', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    username: regUsernameValue,
+                    password: regPasswordValue,
+                }),
+                })
+            const data = await response.json();
+            if (data.exists) {
+                return false;
+            }
+            return true;
+        } catch (error) {
+            console.error('Error checking username:', error);
+            return false;
+        }
+    }
 
 
 
