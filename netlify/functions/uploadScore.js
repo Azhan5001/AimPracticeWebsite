@@ -2,13 +2,14 @@ const mysql = require('mysql2');
 
 // Set up the MySQL connection
 const pool = mysql.createPool({
-    host: process.env.DATABASE_HOST,
-    user: process.env.DATABASE_USER,
-    password: process.env.DATABASE_PASSWORD,
-    database: process.env.DATABASE_NAME,
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
   });  
 
 exports.handler = async (event, context) => {
+  console.log('Attempting to connect to the database...');
   if (event.httpMethod !== 'POST') {
     return {
       statusCode: 405,
@@ -25,7 +26,7 @@ exports.handler = async (event, context) => {
     const values = [username, score, avgTime, responseScore];
 
     await pool.promise().query(query, values);
-
+    console.log('Database connected successfully');
     return {
       statusCode: 200,
       body: JSON.stringify({ message: 'Score saved successfully!' }),
